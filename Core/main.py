@@ -1,5 +1,6 @@
-from commands import handle_command
+from commands import COMMANDS, handle_command
 from config import load_settings
+from local_ai import generate_reply
 from logging_setup import setup_logging
 
 
@@ -21,6 +22,19 @@ def main():
 
     assistant_name = settings["assistant_name"]
     user_name = settings["user_name"]
+
+    def ask_local(arguments):
+        return generate_reply(
+            prompt=arguments,
+            model=settings["local_model"],
+            assistant_name=assistant_name,
+        )
+
+    COMMANDS["ask"] = {
+        "handler": ask_local,
+        "description": "Ask the local AI: ask Your question",
+        "accepts_arguments": True,
+    }
 
     if settings["show_startup_message"]:
         print(f"{assistant_name} Core")

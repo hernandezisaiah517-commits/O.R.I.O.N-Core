@@ -8,6 +8,7 @@ DEFAULT_SETTINGS = {
     "assistant_name": "O.R.I.O.N.",
     "user_name": "Isaiah",
     "show_startup_message": True,
+    "local_model": "qwen3:4b",
 }
 
 
@@ -29,7 +30,7 @@ def load_settings():
 
         settings.update(saved_settings)
 
-    for key in ("assistant_name", "user_name"):
+    for key in ("assistant_name", "user_name", "local_model"):
         value = settings[key]
 
         if not isinstance(value, str) or not value.strip():
