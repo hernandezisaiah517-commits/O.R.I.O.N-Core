@@ -6,28 +6,32 @@ from urllib.request import Request, urlopen
 CHAT_URL = "http://127.0.0.1:11434/api/chat"
 
 
-def generate_reply(prompt, model, assistant_name):
+def generate_reply(prompt, model, assistant_name, history=None):
     if not prompt.strip():
         return "Usage: ask Your question goes here"
 
+    if history is None:
+        history = []
+
+    system_message = {
+        "role": "system",
+        "content": (
+            f"You are {assistant_name}, a personal assistant. "
+            "Give clear, practical answers. "
+            "Use the supplied conversation history for follow-up questions. "
+            "Do not claim access to files, saved notes, live system "
+            "status, devices, or tools."
+        ),
+    }
+
+    user_message = {
+        "role": "user",
+        "content": f"{prompt}\n/no_think",
+    }
+
     payload = {
         "model": model,
-        "messages": [
-            {
-                "role": "system",
-                "content": (
-                    f"You are {assistant_name}, a personal assistant. "
-                    "Give clear, practical answers. "
-                    "You currently receive only the messages in this request. "
-                    "Do not claim access to files, saved notes, live system "
-                    "status, devices, or tools."
-                ),
-            },
-            {
-                "role": "user",
-                "content": prompt,
-            },
-        ],
+        "messages": [system_message] + history + [user_message],
         "stream": False,
         "think": False,
     }
@@ -73,4 +77,15 @@ def generate_reply(prompt, model, assistant_name):
     if not isinstance(answer, str) or not answer.strip():
         raise ValueError("The local model returned an empty answer.")
 
-    return answer.strip()
+    if "</think>" in answer:
+        answer = answer.split("</think>", 1)[1]
+
+    if "<think>" in answer:
+        raise ValueError("The model returned an incomplete reasoning block.")
+
+    answer = answer.strip()
+
+    if not answer:
+        raise ValueError("The model returned no final answer.")
+
+    return answer
